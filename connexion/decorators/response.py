@@ -60,7 +60,7 @@ class ResponseValidator(BaseDecorator):
                 msg = ("Keys in header don't match response specification. "
                        "Difference: {0}").format(pretty_list)
                 raise NonConformingResponseHeaders(message=msg)
-        return True
+        return data
 
     def is_json_schema_compatible(self, response_schema):
         """
@@ -87,11 +87,16 @@ class ResponseValidator(BaseDecorator):
         def _wrapper(request, response):
             connexion_response = \
                 self.operation.api.get_connexion_response(response, self.mimetype)
-            self.validate_response(
+            validated_body = self.validate_response(
                 connexion_response.body, connexion_response.status_code,
                 connexion_response.headers, request.url)
 
-            return response
+            # hack
+            if validated_body and not isinstance(validated_body, bytes):
+                _, ret_value = response
+                return (validated_body, ret_value)
+            else:
+                return response
 
         if has_coroutine(function):
             from .coroutine_wrappers import get_response_validator_wrapper
