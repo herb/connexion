@@ -93,8 +93,7 @@ class ResponseValidator(BaseDecorator):
 
             # hack
             if validated_body and not isinstance(validated_body, bytes):
-                _, ret_value = response
-                return (validated_body, ret_value)
+                return (validated_body, *response[1:])
             else:
                 return response
 
